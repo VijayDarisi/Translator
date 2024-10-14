@@ -1,5 +1,6 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const fs = require("fs");
+const {gtranslate} = require("./gtranslate");
 require("dotenv").config();
 const XLSX = require("xlsx");
 
@@ -67,12 +68,11 @@ async function run(countryLanguageMapping) {
     }
 
     for (const languageCode of languageCodesForTranslations) {
-      const prompt = createPrompt(languageCode, input);
-
-      const result = await chatSession.sendMessage(prompt);
-      const inputText = result.response.text(); // Extract the text from the response
-      const content = extractJsonContent(inputText); // Extract JSON content
-
+      // const prompt = createPrompt(languageCode, input);
+      // const result = await chatSession.sendMessage(prompt);
+      // const inputText = result.response.text(); // Extract the text from the response
+      // const content = extractJsonContent(inputText); // Extract JSON content
+      const content = gtranslate(input, languageCode);
       if (content) {
         translations[languageCode] = content;
       }
