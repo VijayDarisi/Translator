@@ -6,7 +6,8 @@ async function gtranslate(input, languageCode) {
     from: "en",
     to: languageCode,
   });
-  const translatedText = unflattenObject(updateKeys(JSON.parse(text), true));
+  // const translatedText = unflattenObject(updateKeys(JSON.parse(text), true));
+  const translatedText = updateKeys(JSON.parse(text), true);
   return translatedText;
 }
 

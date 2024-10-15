@@ -46,7 +46,7 @@ async function run(countryLanguageMapping) {
     return;
   }
   let inputEntries = Object.entries(inputJson);
-  const batchSize = 50;
+  const batchSize = 200;
   const batches = chunkArray(inputEntries, batchSize);
 
   for (const batch of batches) {
@@ -72,7 +72,7 @@ async function run(countryLanguageMapping) {
       // const result = await chatSession.sendMessage(prompt);
       // const inputText = result.response.text(); // Extract the text from the response
       // const content = extractJsonContent(inputText); // Extract JSON content
-      const content = gtranslate(input, languageCode);
+      const content = await gtranslate(inputJson, languageCode);
       if (content) {
         translations[languageCode] = content;
       }
