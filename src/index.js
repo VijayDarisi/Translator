@@ -3,7 +3,6 @@ const fs = require("fs");
 require("dotenv").config();
 const XLSX = require("xlsx");
 
-
 const {
   extractJsonContent,
   getUniqueLanguageCodes,
@@ -13,7 +12,12 @@ const {
   createChatSession,
   createRowsAndColumns,
 } = require("./utils");
-const { generationConfig, countryLanguageMapping, paths } = require("../config");
+const {
+  generationConfig,
+  countryLanguageMapping,
+  paths,
+} = require("../config");
+const { languages } = require("../data/languages");
 
 async function run() {
   // Get Gemini API Key from environmental variables
@@ -44,29 +48,33 @@ async function run() {
     countryLanguageMapping
   );
 
-  console.log("Translating...");
+  console.log("Translating into ...", languageCodesForTranslations);
 
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-for (const languageCode of languageCodesForTranslations) {
-  const prompt = createPrompt(languageCode, input);
-
-  const result = await chatSession.sendMessage(prompt);
-  const inputText = result.response.text(); // Extract the text from the response
-  const content = extractJsonContent(inputText); // Extract JSON content
-
-  if (content) {
-    translations[languageCode] = content;
+  function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  // Wait for 2 seconds before the next iteration
-  await delay(2000);
-}
+  for (const languageCode of languageCodesForTranslations) {
+    const prompt = createPrompt(languageCode, input);
+
+    const result = await chatSession.sendMessage(prompt);
+    const inputText = result.response.text(); // Extract the text from the response
+    const content = extractJsonContent(inputText); // Extract JSON content
+
+    console.log("Translated into  ", languages[languageCode], !!content)
+
+    if (content) {
+      translations[languageCode] = content;
+    }
+
+    // Wait for 2 seconds before the next iteration
+    await delay(2000);
+  }
 
   console.log("Translation Done.");
   console.log("Storing your translated jsons");
+
+  // createOrUpdateFile(fs, "./email_translation.json", translations);
 
   for (const [countryCode, languageCodes] of Object.entries(
     countryLanguageMapping
@@ -81,6 +89,13 @@ for (const languageCode of languageCodesForTranslations) {
 
       const outputFilePath = `${folderName}/${paths.outputJsonFileName}.json`;
       const outputJsonString = translations[languageCode];
+
+      if (!translations[languageCode])
+        console.log(
+          translations[languageCode],
+          languageCode,
+          "translations[languageCode]"
+        );
 
       createOrUpdateFile(fs, outputFilePath, outputJsonString);
     }
@@ -113,7 +128,7 @@ for (const languageCode of languageCodesForTranslations) {
     console.log("Excel file created successfully.");
   }
 
-  console.log(translations); // Print the object with all translations
+  // console.log(translations); // Print the object with all translations
 }
 
 run();

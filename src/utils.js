@@ -143,6 +143,27 @@ const createRowsAndColumns = (
   }
 };
 
+function flattenObject(obj, parentKey = "", result = {}) {
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const newKey = parentKey ? `${parentKey}.${key}` : key;
+      if (typeof obj[key] === "object" && obj[key] !== null) {
+        flattenObject(obj[key], newKey, result);
+      } else {
+        result[newKey] = obj[key];
+      }
+    }
+  }
+  return result;
+}
+
+function addPrefixToKeys(obj, fileName) {
+  return Object.keys(obj).reduce((newObj, key) => {
+    newObj[`${key}`] = obj[key];
+    return newObj;
+  }, {});
+}
+
 //
 const gatherTranslations = (jsonFileName, dirPath, translations = {}) => {
   const entries = fs.readdirSync(dirPath, { withFileTypes: true });
@@ -152,13 +173,22 @@ const gatherTranslations = (jsonFileName, dirPath, translations = {}) => {
 
     if (entry.isDirectory()) {
       gatherTranslations(jsonFileName, fullPath, translations);
-    } else if (entry.isFile() && entry.name === `${jsonFileName}.json`) {
-      const fileContents = fs.readFileSync(fullPath, "utf8");
-      const parsedData = JSON.parse(fileContents);
-      const [country, lang] = path.basename(dirPath).split("-");
+    } else if (entry.isFile()) {
+      jsonFileName?.map((eachFileName) => {
+        if (entry.name === `${eachFileName}.json`) {
+          const fileContents = fs.readFileSync(fullPath, "utf8");
+          const parsedData = JSON.parse(fileContents);
+          const flattenedObject = flattenObject(parsedData);
+          const updatedObj = addPrefixToKeys(flattenedObject, eachFileName);
+          const [country, lang] = path.basename(dirPath).split("-");
 
-      if (!translations[country]) translations[country] = {};
-      translations[country][lang] = parsedData;
+          if (!translations[country]) translations[country] = {};
+          translations[country][lang] = {
+            ...translations[country][lang],
+            ...updatedObj,
+          };
+        }
+      });
     }
   });
 
